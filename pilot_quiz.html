@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ข้อสอบนักบิน (เกมทดสอบ)</title>
+<style>
+  body {
+    font-family: "Segoe UI", sans-serif;
+    background: #e6f0ff;
+    padding: 20px;
+  }
+  .container {
+    max-width: 700px;
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    margin: auto;
+  }
+  h2 {
+    text-align: center;
+    color: #003366;
+  }
+  .question {
+    font-weight: bold;
+  }
+  .options {
+    margin-top: 10px;
+  }
+  button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #005fa3;
+  }
+  .timer {
+    text-align: center;
+    font-size: 20px;
+    color: red;
+    margin-bottom: 10px;
+  }
+  #usernameContainer {
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🛫 ข้อสอบนักบิน (ความรู้ทั่วไป)</h2>
+
+  <div id="usernameContainer">
+    <p>กรุณากรอกชื่อผู้เข้าสอบ</p>
+    <input type="text" id="username" placeholder="ชื่อผู้เล่น" required>
+    <br><br>
+    <button id="startBtn">เริ่มทำข้อสอบ</button>
+  </div>
+
+  <div id="quizContainer" style="display:none;">
+    <div class="timer" id="timer">เหลือเวลา: 30:00</div>
+    <div id="quiz"></div>
+    <button id="nextBtn">ข้อต่อไป ▶</button>
+  </div>
+
+  <div id="result" class="result" style="text-align:center; font-size:18px; margin-top:20px;"></div>
+</div>
+
+<script>
+const quizData = [
+  { q: "1. เครื่องบินสามารถลอยอยู่ในอากาศได้เพราะหลักการใด?", options: ["แรงโน้มถ่วง", "แรงยก (Lift)", "แรงเฉื่อย", "แรงดันอากาศจากเครื่องยนต์"], answer: 1 },
+  { q: "2. ส่วนใดของเครื่องบินทำหน้าที่ควบคุมการหมุนรอบแกนยาว (Roll)?", options: ["Elevator", "Rudder", "Aileron", "Flap"], answer: 2 },
+  { q: "3. หน่วยวัดความเร็วของเครื่องบินคืออะไร?", options: ["กิโลเมตรต่อชั่วโมง", "ไมล์ต่อชั่วโมง", "นอต (Knot)", "ฟุตต่อวินาที"], answer: 2 },
+  { q: "4. Cockpit หมายถึงอะไร?", options: ["ห้องเก็บสัมภาระ", "ห้องนักบิน", "ห้องเครื่องยนต์", "ปีกเครื่องบิน"], answer: 1 },
+  { q: "5. ส่วนใดของเครื่องบินใช้สร้างแรงขับเคลื่อน (Thrust)?", options: ["ปีก", "หาง", "เครื่องยนต์", "ล้อ"], answer: 2 },
+  { q: "6. ในการบิน เครื่องมือ “Altimeter” ใช้วัดอะไร?", options: ["ความเร็ว", "ทิศทาง", "ความสูง", "ความดันน้ำมัน"], answer: 2 },
+  { q: "7. “Black Box” จริง ๆ แล้วมีสีอะไร?", options: ["ดำ", "ส้ม", "เงิน", "เทา"], answer: 1 },
+  { q: "8. แกนหมุนของเครื่องบินมีทั้งหมดกี่แกนหลัก?", options: ["1", "2", "3", "4"], answer: 2 },
+  { q: "9. แรงหลักที่กระทำต่อเครื่องบินมีทั้งหมดกี่แรง?", options: ["2", "3", "4", "5"], answer: 2 },
+  { q: "10. “Flap” ใช้เพื่ออะไร?", options: ["เพิ่มแรงยกในช่วงบินระดับ", "ลดแรงยกและเพิ่มแรงต้านในช่วงลงจอด", "ลดความเร็วขณะบินขึ้น", "ปรับทิศทางการหมุน"], answer: 1 },
+  { q: "11. ถ้าเครื่องบินบินจากทิศตะวันตกไปตะวันออก จะใช้เวลาเร็วขึ้นหรือนานขึ้นเมื่อเทียบกับทิศตรงข้าม?", options: ["เร็วขึ้น เพราะ Jet Stream", "นานขึ้น เพราะแรงลมต้าน", "เท่ากันเสมอ", "ไม่แน่นอน"], answer: 0 },
+  { q: "12. เครื่องบินต้อง “Trim” เพื่ออะไร?", options: ["ตกแต่งห้องนักบิน", "ปรับสมดุลแรงบังคับ", "เพิ่มความเร็ว", "ลดแรงเฉื่อย"], answer: 1 },
+  { q: "13. ปีกเครื่องบินมีรูปทรงแบบใดเพื่อสร้างแรงยก?", options: ["กลม", "แบนเท่ากันสองด้าน", "ด้านบนโค้ง ด้านล่างแบน", "ปีกสามเหลี่ยม"], answer: 2 },
+  { q: "14. “Rudder” ใช้ควบคุมการหมุนรอบแกนใด?", options: ["Pitch", "Roll", "Yaw", "Thrust"], answer: 2 },
+  { q: "15. เมื่ออุณหภูมิลดลง ความหนาแน่นของอากาศจะ…", options: ["เพิ่มขึ้น", "ลดลง", "เท่าเดิม", "ไม่มีผล"], answer: 0 },
+  { q: "16. กัปตัน (Captain) นั่งอยู่ฝั่งใดของห้องนักบิน?", options: ["ซ้าย", "ขวา", "กลาง", "ด้านหลัง"], answer: 0 },
+  { q: "17. ส่วนไหนช่วยควบคุมความสูงของเครื่องบินในแนวดิ่ง?", options: ["Aileron", "Elevator", "Rudder", "Flap"], answer: 1 },
+  { q: "18. ระบบสื่อสารของนักบินกับหอบังคับการเรียกว่าอะไร?", options: ["Radio Communication", "Telemetry", "Radar", "Wi-Fi"], answer: 0 },
+  { q: "19. ถ้าเครื่องบินบินต่ำกว่า 10,000 ฟุต ความเร็วไม่ควรเกิน?", options: ["250 นอต", "300 นอต", "350 นอต", "400 นอต"], answer: 0 },
+  { q: "20. เรือบิน (Seaplane) แตกต่างจากเครื่องบินทั่วไปตรงที่อะไร?", options: ["ใช้ใบพัดสองชั้น", "บินได้สูงกว่า", "ลงจอดในน้ำได้", "ไม่มีล้อ"], answer: 2 },
+];
+
+let username = "";
+let current = 0;
+let score = 0;
+let timer;
+let timeLeft = 1800; // 30 นาที
+
+const quiz = document.getElementById("quiz");
+const nextBtn = document.getElementById("nextBtn");
+const timerDisplay = document.getElementById("timer");
+const quizContainer = document.getElementById("quizContainer");
+const usernameContainer = document.getElementById("usernameContainer");
+const result = document.getElementById("result");
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  const inputName = document.getElementById("username").value.trim();
+  if (!inputName) return alert("กรุณากรอกชื่อผู้เล่นก่อนเริ่ม!");
+  username = inputName;
+  usernameContainer.style.display = "none";
+  quizContainer.style.display = "block";
+  loadQuestion();
+  startTimer();
+});
+
+function loadQuestion() {
+  const q = quizData[current];
+  quiz.innerHTML = `
+    <div class="question">${q.q}</div>
+    <div class="options">
+      ${q.options.map((opt, i) => `
+        <label>
+          <input type="radio" name="answer" value="${i}"> ${opt}
+        </label><br>`).join("")}
+    </div>
+  `;
+}
+
+nextBtn.addEventListener("click", () => {
+  const selected = document.querySelector("input[name='answer']:checked");
+  if (!selected) return alert("กรุณาเลือกคำตอบก่อน!");
+
+  if (parseInt(selected.value) === quizData[current].answer) score++;
+
+  current++;
+  if (current < quizData.length) {
+    loadQuestion();
+  } else {
+    finishQuiz();
+  }
+});
+
+function startTimer() {
+  timer = setInterval(() => {
+    timeLeft--;
+    let minutes = Math.floor(timeLeft / 60);
+    let seconds = timeLeft % 60;
+    timerDisplay.textContent = `เหลือเวลา: ${minutes}:${seconds.toString().padStart(2,'0')}`;
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      alert("หมดเวลาแล้ว!");
+      finishQuiz();
+    }
+  }, 1000);
+}
+
+function finishQuiz() {
+  clearInterval(timer);
+  quizContainer.style.display = "none";
+  result.innerHTML = `⏱ ชื่อผู้เล่น: <b>${username}</b><br>คะแนนที่ได้: <b>${score}/${quizData.length}</b>`;
+  
+  // === ส่งข้อมูลไป Google Sheet ===
+  fetch("https://script.google.com/macros/s/AKfycbzLvBf-OPxX_o4ZQ8x21cdq2nj35EygxfhlfX1IH8ayfyJl6B0ElkJMS2JOZy3o3GSYaA/exec", {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: username, score: score, total: quizData.length })
+  });
+}
+</script>
+
+</body>
+</html>
